@@ -1,0 +1,51 @@
+- name: "Installing required software"
+  apt: name={{ item }} state=installed
+  with_items:
+  - gunicorn
+  - supervisor
+  - python-mysqldb
+  - python-falcon
+
+- name: "Making sure supervisor is enabled and started"
+  service: name=supervisor state=started enabled=yes
+
+- name: "Creating the base folder of the application"
+  file: path=/opt/{{ application_name }} state=directory owner=nobody group=nogroup mode=0755
+
+- name: Gather facts for dbserver EC2 instances
+  become: false
+  local_action:
+    module: ec2_instance_facts
+    region: "{{ aws_region }}"
+    filters:
+      "tag:Role": dbserver
+      "tag:Environment": "{{ environment_name | default('Development') }}"
+      "tag:Application": "{{ application_name | default('{{ application_name }}') }}"
+      instance-state-name: running
+  register: ec2_instances
+
+- name: Get The RDS Facts from AWS
+  become: false
+  local_action:
+    module: rds
+    command: facts
+    region: '{{ aws_region }}'
+    instance_name: '{{ rds_instance_name  }}'
+  register: rds_facts
+
+- name: set fact with dbserver ip address
+  become: false
+  local_action:
+    module: set_fact
+    dbserver_fqdn: "{{ rds_facts.instance.endpoint }}"
+
+- name: "Copying the application"
+  template: src=../files/{{ application_name }}_py.j2 dest=/opt/{{ application_name }}/{{ application_name }}.py owner=nobody group=nogroup mode=0755
+  notify:
+  - restart-app
+
+- name: "Copying the supervisor config file"
+  template: src=../files/{{ application_name }}_conf.j2 dest=/etc/supervisor/conf.d/{{ application_name }}.conf owner=nobody group=nogroup mode=0644
+  notify:
+  - reread-config
+  - restart-app

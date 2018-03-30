@@ -1,0 +1,17 @@
+- hosts: tag_Application_{{ application_name | default('bestsongs') }}:&tag_Environment_{{ environment_name | default('Development') }}
+  gather_facts: true
+  become: true
+  roles:
+    - basic
+
+- hosts: tag_Application_{{ application_name | default('bestsongs') }}:&tag_Environment_{{ environment_name | default('Development') }}:&tag_Role_webserver
+  gather_facts: true
+  become: true
+  roles:
+    - webserver
+
+- hosts: tag_Application_{{ application_name | default('bestsongs') }}:&tag_Environment_{{ environment_name | default('Development') }}:&tag_Role_appserver
+  gather_facts: true
+  become: true
+  roles:
+    - appserver

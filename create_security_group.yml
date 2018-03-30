@@ -1,0 +1,52 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+  - name: Get my current IP address
+    uri:
+      url: http://checkip.amazonaws.com/
+      return_content: yes
+    register: my_ip
+
+  - name: Create simple security group
+    ec2_group:
+      name: "{{ aws_security_group_name }}"
+      description: A security group for my current IP
+      region: "{{ aws_region }}"
+      rules:
+        - proto: tcp
+          from_port: 80
+          to_port: 80
+          cidr_ip:
+#            - "{{ my_ip.content | replace('\n', '') }}/32"
+#            - 15.0.0.0/9
+            - 0.0.0.0/0
+        - proto: tcp
+          from_port: 22
+          to_port: 22
+          cidr_ip:
+            - "{{ my_ip.content | replace('\n', '') }}/32"
+#            - 15.0.0.0/9
+        - proto: tcp
+          from_port: 3306
+          to_port: 3306
+          cidr_ip:
+            - "{{ my_ip.content | replace('\n', '') }}/32"
+#            - 15.0.0.0/9
+        - proto: all
+          group_name: "{{ aws_security_group_name }}"
+      rules_egress:
+        - proto: tcp
+          from_port: 80
+          to_port: 80
+          cidr_ip: 0.0.0.0/0
+        - proto: all
+          group_name: "{{ aws_security_group_name }}"
+      tags:
+        Application: "{{ application_name }}"
+    register: created_group
+
+#  - name: Display output
+#    debug:
+#      var: ec2_group

@@ -1,0 +1,58 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: false
+  become: false
+  tasks:
+  - name: get application security group facts
+    ec2_group_facts:
+      region: "{{ aws_region }}"
+      filters:
+        "tag:Application": "{{ application_name | default('bestsongs') }}"
+    register: group_facts
+
+#  - name: display group facts
+#    debug:
+#      var: group_facts.security_groups[0].group_id
+
+  - name: Create RDS instance and DB
+    rds:
+      command: create
+      region: "{{ aws_region }}"
+      instance_name: "{{ rds_instance_name }}"
+      instance_type: "{{ rds_instance_type }}"
+      db_engine: "{{ rds_db_engine }}"
+      size: "{{ rds_instance_size }}"
+      username: "{{ rds_user }}"
+      password: "{{ lookup('password', 'credentials/dbpassword.txt') }}"
+      db_name: "{{ rds_db_name }}"
+      vpc_security_groups: "{{ group_facts.security_groups[0].group_id }}"
+      backup_retention: 0
+      multi_zone: no
+      wait: yes
+      wait_timeout: 600
+      tags:
+        Application: "{{ application_name }}"
+        Environment: "{{ environment_name | default('Development') }}"
+    register: rds_db
+    notify: import sample data
+
+#  - name: Display rds_db
+#    debug:
+#      var: rds_db
+
+  handlers:
+  - name: import sample data
+    mysql_db:
+      login_host: "{{ rds_db.instance.endpoint }}"
+      login_user: "{{ rds_db.instance.username }}"
+      login_password: "{{ lookup('password', 'credentials/dbpassword.txt') }}"
+      login_port: 3306
+      name: "{{ rds_db_name }}"
+      state: import
+      target: sample_data/dbdump.sql
+    register: import_result
+
+#  - name: Display import_result
+#    debug:
+#      var: import_result

@@ -1,0 +1,2 @@
+ProxyPass / http://{{ appserver_private_ip_address }}:{{ application_port }}/
+ProxyPassReverse / http://{{ appserver_private_ip_address }}:{{ application_port }}/

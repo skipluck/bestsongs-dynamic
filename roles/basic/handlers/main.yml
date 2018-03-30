@@ -1,0 +1,9 @@
+- name: update ssh configuration
+  lineinfile: dest=/etc/ssh/sshd_config
+              regexp="^#Banner"
+              line="Banner /etc/ssh_banner.txt"
+              state=present
+  notify: restart ssh
+
+- name: restart ssh
+  service: name=ssh state=restarted

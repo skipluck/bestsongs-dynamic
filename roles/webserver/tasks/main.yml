@@ -1,0 +1,40 @@
+- name: "Installing webserver software packages"
+  apt: pkg={{ item }} state=latest
+  with_items:
+  - apache2
+
+- name: "Enabling proxy module"
+  apache2_module: name=proxy_http
+
+
+- name: Gather facts for appserver EC2 instances
+  become: false
+  local_action:
+    module: ec2_instance_facts
+    region: "{{ aws_region }}"
+    filters:
+      "tag:Role": appserver
+      "tag:Environment": "{{ environment_name | default('Development') }}"
+      "tag:Application": "{{ application_name | default('bestsongs') }}"
+      instance-state-name: running
+  register: ec2_instances
+
+- name: set fact with appserver ip address
+  become: false
+  local_action:
+    module: set_fact
+    appserver_private_ip_address: "{{ ec2_instances.instances[0].private_ip_address }}"
+
+#- name: "Display IP address of app server"
+#  debug:
+#    msg="IP address of appserver is {{ appserver_private_ip_address }}"
+
+- name: Adding Proxy Configuration
+  template:
+    src: ../files/proxy_conf.j2
+    dest: /etc/apache2/conf-available/proxy.conf
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+  - enable-proxy-config

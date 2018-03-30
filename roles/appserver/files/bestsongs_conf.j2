@@ -1,0 +1,8 @@
+[program:{{ application_name }}]
+command=/usr/bin/gunicorn --bind 0.0.0.0:{{ application_port }} {{ application_name }}:app
+directory=/opt/{{ application_name }}
+user=nobody
+autostart=true
+autorestart=true
+redirect_stderr=true
+environment=databasepassword="{{ lookup('password', 'credentials/dbpassword.txt') }}"

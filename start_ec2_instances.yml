@@ -1,0 +1,11 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: false
+  tasks:
+  - name: start ec2 instances
+    ec2:
+      region: "{{ aws_region }}"
+      instance_tags:
+          Environment: "{{ environment_name | default('Development') }}"
+      state: running

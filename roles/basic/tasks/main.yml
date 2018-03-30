@@ -1,0 +1,39 @@
+- name: Check if there are packages available to be installed/upgraded
+  command: /usr/lib/update-notifier/apt-check --package-names
+  register: packages
+
+- name: Upgrade all packages to the latest version
+  apt: update_cache=yes upgrade=safe
+  when: packages.stderr != ""
+
+- name: Check if a reboot is required
+  register: file
+  stat: path=/var/run/reboot-required get_md5=no
+
+- name: Reboot the server
+#  command: /sbin/reboot
+  shell: sleep 2 && /sbin/shutdown -r now "Ansible system reboot"
+  async: 1
+  poll: 0
+  when: file.stat.exists == true
+
+- name: check if online
+  become: false
+  local_action:
+    module: wait_for
+      host={{ inventory_hostname }}
+      port=22
+      delay=30
+      timeout=300
+  when: file.stat.exists == true
+
+- name: "Installing commonly used software packages"
+  apt: pkg={{ item }} state=latest
+  with_items:
+  - dnsutils
+  - wget
+  - vim
+
+- name: "Adding SSH Banner"
+  copy: src=../files/ssh_banner.txt dest=/etc/ssh_banner.txt owner=root group=root mode=0644
+  notify: update ssh configuration

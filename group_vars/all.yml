@@ -1,0 +1,17 @@
+asible_python_interpreter: /usr/bin/python3
+environment_name: Development
+application_name:  bestsongs
+application_port: 8000
+aws_key_name:  ansiblecontrol-work
+aws_instance_type: t2.nano
+aws_image: ami-66506c1c
+aws_region:  us-east-1
+instance_count: 1
+aws_security_group_name: HTTPandSSHandMySQL #port 80,22 and 3306 from local ip only
+rds_instance_name: "{{application_name}}Instance"
+rds_instance_type: db.t2.micro
+rds_instance_size: 20
+rds_db_name: "{{application_name}}_db"
+rds_user: rds_admin
+rds_db_engine: MySQL
+page_title: Best Songs of the Rock Era
