@@ -3,7 +3,7 @@ import falcon
 import MySQLdb
 import os
 
-class QuoteResource:
+class SongResource:
 
     def on_get(self, req, resp):
         """Handles GET requests"""
@@ -30,4 +30,4 @@ class QuoteResource:
 
 
 app = falcon.API()
-app.add_route('/', QuoteResource())
+app.add_route('/', SongResource())

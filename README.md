@@ -18,9 +18,8 @@ Open terminal window and run the following commands
 ### Install Python3 and required packages on Ubuntu Linux
 ````
 sudo apt-get update
-sudo apt-get install python3 python3-dev python3-pip libmysqlclient-dev mysql-client
+sudo apt-get install python3 python3-dev python3-pip libmysqlclient-dev mysql-client libssl-dev
 pip3 install --upgrade pip
-pip3 install virtualenv
 ````
 ### Cloning this project from github
 ````
@@ -30,7 +29,7 @@ git clone https://github.com/skipluck/bestsongs-dynamic
 ### Creating Ansible Project Virtual Environment
 ````
 cd bestsongs-dynamic
-virtualenv --python=/usr/bin/python3 BestSongs
+python3 -m venv BestSongs
 source BestSongs/bin/activate
 ````
 
@@ -39,10 +38,8 @@ source BestSongs/bin/activate
 pip3 install ansible boto boto3 "pywinrm>=0.3.0" mysqlclient
 ````
 
-### Download AWS Dynamic Inventory files
+### Change permission for AWS Dynamic Inventory files
 ````
-wget https://raw.github.com/ansible/ansible/devel/contrib/inventory/ec2.py
-wget https://raw.githubusercontent.com/ansible/ansible/devel/contrib/inventory/ec2.ini
 chmod +x ec2.py
 ````
 ### Set environment variables
